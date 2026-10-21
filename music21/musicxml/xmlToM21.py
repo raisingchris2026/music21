@@ -1747,6 +1747,10 @@ class PartParser(XMLParserBase):
             # 1. midiProgram matches (this will catch non-default transpositions in name)
             # 2. midiProgram is Piano (often this is encoded only as piano for convenience)
             if inst_from_name.midiProgram == i.midiProgram or isinstance(i, instrument.Piano):
+                # an unrecognized name gives a plain Instrument: keep the file's program
+                if (type(inst_from_name) is instrument.Instrument
+                        and inst_from_name.midiProgram is None):
+                    inst_from_name.midiProgram = i.midiProgram
                 i = inst_from_name
 
         i.partId = self.partId

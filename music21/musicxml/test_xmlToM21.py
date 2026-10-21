@@ -598,6 +598,35 @@ class Test(unittest.TestCase):
         self.assertEqual(len(instStream), 7)
         # s.show()
 
+    def testPianoProgramWithUnrecognizedName(self):
+        '''
+        A piano MIDI program is replaced by the instrument made from the name,
+        but if the name isn't recognized, the program should not be lost.
+        '''
+        from music21 import converter
+
+        def score(name, program):
+            return ('<score-partwise version="4.0"><part-list><score-part id="P1">'
+                    '<part-name>Music</part-name><score-instrument id="P1-I1">'
+                    f'<instrument-name>{name}</instrument-name></score-instrument>'
+                    '<midi-instrument id="P1-I1">'
+                    f'<midi-program>{program}</midi-program></midi-instrument>'
+                    '</score-part></part-list><part id="P1"><measure number="1">'
+                    '<attributes><divisions>1</divisions></attributes>'
+                    '<note><pitch><step>C</step><octave>4</octave></pitch>'
+                    '<duration>4</duration><type>whole</type></note></measure></part>'
+                    '</score-partwise>')
+
+        def instruments(name, program):
+            s = converter.parse(score(name, program), format='musicxml')
+            return [(type(i).__name__, i.midiProgram) for i in s[instrument.Instrument]]
+
+        self.assertEqual(instruments('Doubler', 1), [('Instrument', 0)])
+        self.assertEqual(instruments('Doubler', 2), [('Instrument', 1)])
+        self.assertEqual(instruments('Doubler', 41), [('Violin', 40)])
+        # a recognized name still replaces a piano program
+        self.assertEqual(instruments('Violin', 1), [('Violin', 40)])
+
     def testHarmonyA(self):
         from music21 import corpus
 
